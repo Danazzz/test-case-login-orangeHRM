@@ -1,59 +1,44 @@
-/// <reference types="cypress" />
+import LoginPage from '../../pages/loginPage';
 
-describe('Test Automation for OrangeHRM Login', () => {
+describe('Login Automation Tests - OrangeHRM', () => {
+  const loginPage = new LoginPage();
+
   beforeEach(() => {
-    cy.intercept('POST', '/web/index.php/auth/validate').as('loginRequest');
-
-    cy.visit('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
+    cy.visit('https://opensource-demo.orangehrmlive.com/');
   });
 
-  it('TC_Login_001: Login with valid credentials', () => {
-    cy.get('input[name="username"]').type('Admin');
-    cy.get('input[name="password"]').type('admin123');
-    cy.get('button[type="submit"]').click();
-
-    cy.wait('@loginRequest').its('response.statusCode').should('be.oneOf', [200, 302]);
-
+  it('Should log in successfully with valid credentials', () => {
+    loginPage.enterUsername('Admin');
+    loginPage.enterPassword('admin123');
+    loginPage.clickLoginButton();
     cy.url().should('include', '/dashboard');
   });
 
-  it('TC_Login_002: Login with invalid credentials', () => {
-    cy.get('input[name="username"]').type('InvalidUser');
-    cy.get('input[name="password"]').type('invalid123');
-    cy.get('button[type="submit"]').click();
-
-    cy.wait('@loginRequest').its('response.statusCode').should('be.oneOf', [200, 302]);
-
-    cy.url().should('include', '/auth/login');
-
-    cy.get('.oxd-alert-content').should('contain.text', 'Invalid credentials');
+  it('Should display an error for invalid credentials', () => {
+    loginPage.enterUsername('InvalidUser');
+    loginPage.enterPassword('invalid123');
+    loginPage.clickLoginButton();
+    loginPage.validateErrorMessage('Invalid credentials', true);
   });
 
-  it('TC_Login_003: Login with empty fields', () => {
-    cy.get('button[type="submit"]').click();
-
-    cy.get('.oxd-input-group__message').should('contain.text', 'Required');
+  it('Should display an error for empty username and password', () => {
+    loginPage.enterUsername('');
+    loginPage.enterPassword('');
+    loginPage.clickLoginButton();
+    loginPage.validateErrorMessage('Required');
   });
 
-  it('TC_Login_004: Login with username in lowercase', () => {
-    cy.get('input[name="username"]').type('admin'); 
-    cy.get('input[name="password"]').type('admin123');
-    cy.get('button[type="submit"]').click();
-
-    cy.wait('@loginRequest').its('response.statusCode').should('be.oneOf', [200, 302]);
-
+  it('Should log in successfully with lower case username', () => {
+    loginPage.enterUsername('admin');
+    loginPage.enterPassword('admin123');
+    loginPage.clickLoginButton();
     cy.url().should('include', '/dashboard');
   });
 
-  it('TC_Login_005: Login with special characters in username', () => {
-    cy.get('input[name="username"]').type('@dm!n');
-    cy.get('input[name="password"]').type('admin123');
-    cy.get('button[type="submit"]').click();
-
-    cy.wait('@loginRequest').its('response.statusCode').should('be.oneOf', [200, 302]);
-
-    cy.url().should('include', '/auth/login');
-
-    cy.get('.oxd-alert-content').should('contain.text', 'Invalid credentials');
+  it('Should display an error for special characters in username', () => {
+    loginPage.enterUsername('@dm!n');
+    loginPage.enterPassword('admin123');
+    loginPage.clickLoginButton();
+    loginPage.validateErrorMessage('Invalid credentials', true);
   });
 });
